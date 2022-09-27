@@ -1,12 +1,14 @@
-module Gherkin exposing (Background, FeatureDefinition, FeatureFile, Scenario, ScenarioBase(..), ScenarioOutline, Tag, toString)
+module Gherkin exposing (Background, FeatureDefinition, FeatureFile, GivenWhenThen(..), Scenario, Step, Tag, toString)
 
 -- Data types for a Gherkin document
 
 
 type alias FeatureFile =
     { definition : FeatureDefinition
-    , background : Maybe Background
-    , scenarios : List ScenarioBase
+    , feature : List String
+
+    --, background : Maybe Background
+    , scenarios : List Scenario
     }
 
 
@@ -23,20 +25,25 @@ type alias Background =
     }
 
 
-type ScenarioBase
-    = Scenario
-        { tagLine : List Tag
-        , title : String
-        , description : String
-        , steps : List Step
-        }
-    | ScenarioOutline
-        { tagLine : List Tag
-        , title : String
-        , description : String
-        , steps : List OutlineStep
-        , examples : Examples
-        }
+type alias Scenario =
+    { tagLine : List Tag
+    , title : String
+    , description : String
+    , steps : List Step
+    }
+
+
+
+{- type ScenarioBase
+   =
+   | ScenarioOutline
+       { tagLine : List Tag
+       , title : String
+       , description : String
+       , steps : List OutlineStep
+       , examples : Examples
+       }
+-}
 
 
 type alias Examples =
