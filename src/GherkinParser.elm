@@ -100,10 +100,6 @@ untilEnd =
 
 descriptionHelper : List String -> Parser (Step (List String) (List String))
 descriptionHelper state =
-    let
-        _ =
-            Debug.log "helper" state
-    in
     case state of
         "" :: tail ->
             succeed ()
