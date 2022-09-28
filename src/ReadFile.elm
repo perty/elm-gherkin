@@ -2,7 +2,6 @@ module ReadFile exposing (program)
 
 import Gherkin exposing (FeatureFile)
 import GherkinParser
-import Parser
 import Posix.IO as IO exposing (IO, Process)
 import Posix.IO.File as File
 import Posix.IO.Process as Proc
@@ -23,11 +22,6 @@ program process =
             Proc.logErr "Usage: elm-cli <program> file\n"
 
 
-parseFile : String -> IO ()
-parseFile contents =
-    Proc.print contents
-
-
 parse : String -> IO ()
 parse contents =
     case GherkinParser.parse contents of
@@ -35,4 +29,4 @@ parse contents =
             Proc.print (Gherkin.toString value)
 
         Err error ->
-            Proc.print "Error"
+            Proc.print ("Error" ++ Debug.toString error)

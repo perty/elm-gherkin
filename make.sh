@@ -1,3 +1,3 @@
 #!/bin/bash
 
-elm-cli make src/ReadFile.elm readfile
+elm-cli make --debug src/ReadFile.elm readfile
