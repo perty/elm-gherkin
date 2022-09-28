@@ -84,6 +84,8 @@ type GivenWhenThen
     = Given
     | When
     | Then
+    | And
+    | But
 
 
 toString : FeatureFile -> String

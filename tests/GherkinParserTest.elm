@@ -1,7 +1,7 @@
 module GherkinParserTest exposing (suite)
 
 import Expect exposing (Expectation)
-import Gherkin exposing (FeatureDefinition, FeatureFile)
+import Gherkin exposing (FeatureDefinition, FeatureFile, GivenWhenThen(..), Scenario)
 import GherkinParser
 import Parser
 import Test exposing (..)
@@ -9,23 +9,35 @@ import Test exposing (..)
 
 suite : Test
 suite =
-    describe "Feature definition"
-        [ test "Simple feature definition with a title" <|
-            \_ ->
-                Parser.run GherkinParser.featureDefinition featureDefinition1
-                    |> Expect.equal (Ok featureDefinition1Parsed)
-        , test "With a title and a description" <|
-            \_ ->
-                Parser.run GherkinParser.featureDefinition featureDefinition2
-                    |> Expect.equal (Ok featureDefinition2Parsed)
-        , test "With a title and a description that ends with a keyword" <|
-            \_ ->
-                Parser.run GherkinParser.featureDefinition featureDefinition3
-                    |> Expect.equal (Ok featureDefinition3Parsed)
-        , test "Verify scenario can follow" <|
-            \_ ->
-                Parser.run GherkinParser.gherkinParser featureDefinition3
-                    |> Expect.equal (Ok case3Parsed)
+    describe "Feature file"
+        [ describe "Feature definition"
+            [ test "Simple feature definition with a title" <|
+                \_ ->
+                    Parser.run GherkinParser.featureDefinition featureDefinition1
+                        |> Expect.equal (Ok featureDefinition1Parsed)
+            , test "With a title and a description" <|
+                \_ ->
+                    Parser.run GherkinParser.featureDefinition featureDefinition2
+                        |> Expect.equal (Ok featureDefinition2Parsed)
+            , test "With a title and a description that ends with a keyword" <|
+                \_ ->
+                    Parser.run GherkinParser.featureDefinition featureDefinition3
+                        |> Expect.equal (Ok featureDefinition3Parsed)
+            , test "Verify scenario can follow" <|
+                \_ ->
+                    Parser.run GherkinParser.gherkinParser featureDefinition3
+                        |> Expect.equal (Ok case3Parsed)
+            ]
+        , describe "Scenario definition"
+            [ test "Scenario with a step" <|
+                \_ ->
+                    Parser.run GherkinParser.scenario scenario1
+                        |> Expect.equal (Ok scenario1Parsed)
+            , test "Scenario with many steps" <|
+                \_ ->
+                    Parser.run GherkinParser.scenario scenario2
+                        |> Expect.equal (Ok scenario2Parsed)
+            ]
         ]
 
 
@@ -92,8 +104,71 @@ case3Parsed =
     , scenarios =
         [ { tagLine = []
           , title = "The slack"
-          , description = "TODO"
-          , steps = []
+          , description = ""
+          , steps =
+                [ { givenWhenThen = Given
+                  , argument = "some slack I will love this work"
+                  }
+                ]
+          }
+        ]
+    }
+
+
+scenario1 : String
+scenario1 =
+    """
+    Scenario: scenario title!
+    Given a single step
+    """
+
+
+scenario1Parsed : Scenario
+scenario1Parsed =
+    { tagLine = []
+    , title = "scenario title!"
+    , description = ""
+    , steps =
+        [ { givenWhenThen = Given
+          , argument = "a single step"
+          }
+        ]
+    }
+
+
+scenario2 : String
+scenario2 =
+    """
+    Scenario: scenario title 2!
+    It has a description
+    Given a first step
+    And another step
+    When something is happening
+    Then the result is
+    But not what you expected
+    """
+
+
+scenario2Parsed : Scenario
+scenario2Parsed =
+    { tagLine = []
+    , title = "scenario title 2!"
+    , description = "It has a description\n"
+    , steps =
+        [ { givenWhenThen = Given
+          , argument = "a first step"
+          }
+        , { givenWhenThen = And
+          , argument = "another step"
+          }
+        , { givenWhenThen = When
+          , argument = "something is happening"
+          }
+        , { givenWhenThen = Then
+          , argument = "the result is"
+          }
+        , { givenWhenThen = But
+          , argument = "not what you expected"
           }
         ]
     }

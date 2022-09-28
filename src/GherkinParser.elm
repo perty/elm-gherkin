@@ -1,7 +1,7 @@
-module GherkinParser exposing (featureDefinition, gherkinParser, parse)
+module GherkinParser exposing (featureDefinition, gherkinParser, parse, scenario)
 
 import Gherkin exposing (Background, FeatureDefinition, FeatureFile, GivenWhenThen(..), Scenario, Tag)
-import Parser exposing ((|.), (|=), DeadEnd, Parser, Step(..), Trailing(..), andThen, chompIf, chompUntil, chompUntilEndOr, chompWhile, getChompedString, keyword, loop, map, oneOf, sequence, spaces, succeed, variable)
+import Parser exposing ((|.), (|=), DeadEnd, Parser, Step(..), Trailing(..), andThen, chompUntil, chompUntilEndOr, chompWhile, getChompedString, keyword, loop, map, oneOf, spaces, succeed, variable)
 import Parser.Extras exposing (many)
 import Set
 
@@ -17,12 +17,6 @@ gherkinParser =
         |. spaces
         |= featureDefinition
         |= scenarios
-
-
-scenarios : Parser (List Scenario)
-scenarios =
-    succeed identity
-        |= many scenario
 
 
 featureDefinition : Parser FeatureDefinition
@@ -83,16 +77,17 @@ removeDoubleSpace string =
 descriptionLine : Parser String
 descriptionLine =
     oneOf
-        [ untilScenario
+        [ untilKeyword "Scenario"
+        , untilKeyword "Given"
         , untilEnd
         ]
 
 
-untilScenario : Parser String
-untilScenario =
+untilKeyword : String -> Parser String
+untilKeyword keyword =
     succeed identity
         |. spaces
-        |= getChompedString (chompUntil "Scenario")
+        |= getChompedString (chompUntil keyword)
 
 
 untilEnd : Parser String
@@ -135,9 +130,10 @@ chompLine =
         |= getChompedString (chompUntilEndOr "\n")
 
 
-maybeBackground : Parser (Maybe Background)
-maybeBackground =
-    succeed Nothing
+scenarios : Parser (List Scenario)
+scenarios =
+    succeed identity
+        |= many scenario
 
 
 scenario : Parser Scenario
@@ -154,12 +150,24 @@ scenario =
 
 step : Parser Gherkin.Step
 step =
+    oneOf
+        [ parseStep Given "Given"
+        , parseStep And "And"
+        , parseStep When "When"
+        , parseStep Then "Then"
+        , parseStep But "But"
+        ]
+
+
+parseStep : GivenWhenThen -> String -> Parser Gherkin.Step
+parseStep givenWhenThen key =
     succeed identity
-        |. keyword "Given"
+        |. keyword key
+        |. spaces
         |= getChompedString (chompUntilEndOr "\n")
-        |> andThen makeStep
+        |> andThen (makeStep givenWhenThen)
 
 
-makeStep : String -> Parser Gherkin.Step
-makeStep argument =
-    Gherkin.Step Given argument |> succeed
+makeStep : GivenWhenThen -> String -> Parser Gherkin.Step
+makeStep givenWhenThen argument =
+    Gherkin.Step givenWhenThen argument |> succeed
