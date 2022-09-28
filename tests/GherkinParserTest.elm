@@ -14,11 +14,11 @@ suite =
             \_ ->
                 Parser.run GherkinParser.featureDefinition featureDefinition1
                     |> Expect.equal (Ok featureDefinition1Parsed)
-        , test "With a title a description" <|
+        , test "With a title and a description" <|
             \_ ->
                 Parser.run GherkinParser.featureDefinition featureDefinition2
                     |> Expect.equal (Ok featureDefinition2Parsed)
-        , test "With a title a description that ends with a keyword" <|
+        , test "With a title and a description that ends with a keyword" <|
             \_ ->
                 Parser.run GherkinParser.featureDefinition featureDefinition3
                     |> Expect.equal (Ok featureDefinition3Parsed)
@@ -80,18 +80,19 @@ featureDefinition3Parsed : FeatureDefinition
 featureDefinition3Parsed =
     { tagline = []
     , title = "Some 3rd feature"
-    , description = "Here is the description and it can be several lines.\nThe descriptions last line"
+    , description = "Here is the description and it can be several lines.\n\nThe descriptions last line\n"
     }
 
 
 case3Parsed : FeatureFile
 case3Parsed =
     { definition = featureDefinition3Parsed
-    , background = Nothing
+
+    --, background = Nothing
     , scenarios =
         [ { tagLine = []
-          , title = "String"
-          , description = "String"
+          , title = "The slack"
+          , description = "TODO"
           , steps = []
           }
         ]

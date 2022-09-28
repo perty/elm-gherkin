@@ -1,7 +1,7 @@
 module GherkinParser exposing (featureDefinition, gherkinParser, parse)
 
 import Gherkin exposing (Background, FeatureDefinition, FeatureFile, GivenWhenThen(..), Scenario, Tag)
-import Parser exposing ((|.), (|=), DeadEnd, Parser, Step(..), andThen, chompIf, chompUntil, chompUntilEndOr, chompWhile, getChompedString, keyword, loop, map, oneOf, spaces, succeed, variable)
+import Parser exposing ((|.), (|=), DeadEnd, Parser, Step(..), Trailing(..), andThen, chompIf, chompUntil, chompUntilEndOr, chompWhile, getChompedString, keyword, loop, map, oneOf, sequence, spaces, succeed, variable)
 import Parser.Extras exposing (many)
 import Set
 
@@ -16,21 +16,14 @@ gherkinParser =
     succeed FeatureFile
         |. spaces
         |= featureDefinition
-        |= oneOf
-            [  scenarios
-            , many chompLine
-            ]
+        |= scenarios
+
 
 scenarios : Parser (List Scenario)
 scenarios =
     succeed identity
-    |= many scenario
+        |= many scenario
 
-anyLine : Parser ( String)
-anyLine =
-    succeed identity
-    |= getChompedString <|
-        |.
 
 featureDefinition : Parser FeatureDefinition
 featureDefinition =
@@ -66,6 +59,46 @@ description : Parser String
 description =
     succeed identity
         |. spaces
+        |= descriptionLine
+        |> andThen cleanDescription
+
+
+cleanDescription : String -> Parser String
+cleanDescription string =
+    string
+        |> removeDoubleSpace
+        |> String.replace "\n " "\n"
+        |> succeed
+
+
+removeDoubleSpace : String -> String
+removeDoubleSpace string =
+    if String.contains "  " string then
+        String.replace "  " " " string |> removeDoubleSpace
+
+    else
+        string
+
+
+descriptionLine : Parser String
+descriptionLine =
+    oneOf
+        [ untilScenario
+        , untilEnd
+        ]
+
+
+untilScenario : Parser String
+untilScenario =
+    succeed identity
+        |. spaces
+        |= getChompedString (chompUntil "Scenario")
+
+
+untilEnd : Parser String
+untilEnd =
+    succeed identity
+        |. spaces
         |= loop [] descriptionHelper
         |> andThen mergeLines
 
@@ -80,19 +113,6 @@ descriptionHelper state =
         "" :: tail ->
             succeed ()
                 |> map (\_ -> Done (List.reverse tail))
-
-        head :: tail ->
-            if String.startsWith "Scenario: " head then
-                succeed ()
-                    |> map (\_ -> Done (List.reverse tail))
-
-            else
-                oneOf
-                    [ succeed (\s -> Loop (s :: state))
-                        |= chompLine
-                    , succeed ()
-                        |> map (\_ -> Done (List.reverse state))
-                    ]
 
         _ ->
             oneOf

@@ -5,7 +5,6 @@ module Gherkin exposing (Background, FeatureDefinition, FeatureFile, GivenWhenTh
 
 type alias FeatureFile =
     { definition : FeatureDefinition
-    , feature : List String
 
     --, background : Maybe Background
     , scenarios : List Scenario
