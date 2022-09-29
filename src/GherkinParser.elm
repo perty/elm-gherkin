@@ -1,7 +1,7 @@
-module GherkinParser exposing (featureDefinition, gherkinParser, parse, scenario)
+module GherkinParser exposing (featureDefinition, gherkinParser, parse, scenario, tag)
 
 import Gherkin exposing (Background, FeatureDefinition, FeatureFile, GivenWhenThen(..), Scenario, Tag)
-import Parser exposing ((|.), (|=), DeadEnd, Parser, Step(..), Trailing(..), andThen, chompUntil, chompUntilEndOr, chompWhile, getChompedString, keyword, loop, map, oneOf, spaces, succeed, variable)
+import Parser exposing ((|.), (|=), DeadEnd, Parser, Step(..), Trailing(..), andThen, chompIf, chompUntil, chompUntilEndOr, chompWhile, getChompedString, keyword, loop, map, oneOf, spaces, succeed, variable)
 import Parser.Extras exposing (many)
 import Set
 
@@ -22,7 +22,8 @@ gherkinParser =
 featureDefinition : Parser FeatureDefinition
 featureDefinition =
     succeed FeatureDefinition
-        |= many tag
+        |. spaces
+        |= loop [] tagLoop
         |. spaces
         |. keyword "Feature:"
         |. spaces
@@ -30,16 +31,24 @@ featureDefinition =
         |= description
 
 
+tagLoop : List String -> Parser (Step (List String) (List String))
+tagLoop state =
+    oneOf
+        [ succeed (\s -> Loop (s :: state))
+            |= tag
+        , succeed ()
+            |> map (\_ -> Done (List.reverse state))
+        ]
+
+
 tag : Parser Tag
 tag =
     succeed identity
-        |. keyword "@"
         |= variable
-            { start = Char.isAlphaNum
-            , inner = \c -> Char.isAlphaNum c || c == '_'
+            { start = \c -> c == '@'
+            , inner = \c -> Char.isAlphaNum c || c == '_' || c == '.'
             , reserved = Set.empty
             }
-        |. spaces
 
 
 title : Parser String

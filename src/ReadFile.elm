@@ -26,7 +26,7 @@ parse : String -> IO ()
 parse contents =
     case GherkinParser.parse contents of
         Ok value ->
-            Proc.print (Gherkin.toString value)
+            Proc.print (Debug.toString value)
 
         Err error ->
             Proc.print ("Error" ++ Debug.toString error)

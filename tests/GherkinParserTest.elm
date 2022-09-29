@@ -27,6 +27,14 @@ suite =
                 \_ ->
                     Parser.run GherkinParser.gherkinParser featureDefinition3
                         |> Expect.equal (Ok case3Parsed)
+            , test "With a tag" <|
+                \_ ->
+                    Parser.run GherkinParser.featureDefinition featureDefinition4
+                        |> Expect.equal (Ok featureDefinition4Parsed)
+            , test "Test a tag" <|
+                \_ ->
+                    Parser.run GherkinParser.tag "@tag1.0"
+                        |> Expect.equal (Ok "@tag1.0")
             ]
         , describe "Scenario definition"
             [ test "Scenario with a step" <|
@@ -93,6 +101,23 @@ featureDefinition3Parsed =
     { tagline = []
     , title = "Some 3rd feature"
     , description = "Here is the description and it can be several lines.\n\nThe descriptions last line\n"
+    }
+
+
+featureDefinition4 : String
+featureDefinition4 =
+    """
+       @tag10
+       Feature: Some tagged feature
+    Features may have tags.
+    """
+
+
+featureDefinition4Parsed : FeatureDefinition
+featureDefinition4Parsed =
+    { tagline = [ "@tag10" ]
+    , title = "Some tagged feature"
+    , description = "Features may have tags."
     }
 
 
