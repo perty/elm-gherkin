@@ -22,13 +22,19 @@ gherkinParser =
 featureDefinition : Parser FeatureDefinition
 featureDefinition =
     succeed FeatureDefinition
-        |. spaces
-        |= loop [] tagLoop
+        |= tags
         |. spaces
         |. keyword "Feature:"
         |. spaces
         |= title
-        |= description
+        |= description "Scenario"
+
+
+tags : Parser (List Tag)
+tags =
+    succeed identity
+        |. spaces
+        |= loop [] tagLoop
 
 
 tagLoop : List String -> Parser (Step (List String) (List String))
@@ -58,12 +64,20 @@ title =
         |= getChompedString (chompWhile (\c -> c /= '\n'))
 
 
-description : Parser String
-description =
+description : String -> Parser String
+description stopWord =
     succeed identity
         |. spaces
-        |= descriptionLine
+        |= descriptionLine stopWord
         |> andThen cleanDescription
+
+
+descriptionLine : String -> Parser String
+descriptionLine stopWord =
+    oneOf
+        [ untilKeyword stopWord
+        , untilEnd
+        ]
 
 
 cleanDescription : String -> Parser String
@@ -81,15 +95,6 @@ removeDoubleSpace string =
 
     else
         string
-
-
-descriptionLine : Parser String
-descriptionLine =
-    oneOf
-        [ untilKeyword "Scenario"
-        , untilKeyword "Given"
-        , untilEnd
-        ]
 
 
 untilKeyword : String -> Parser String
@@ -138,18 +143,32 @@ chompLine =
 scenarios : Parser (List Scenario)
 scenarios =
     succeed identity
-        |= many scenario
+        |= loop [] scenarioLoop
+
+
+scenarioLoop : List Scenario -> Parser (Step (List Scenario) (List Scenario))
+scenarioLoop state =
+    let
+        _ =
+            Debug.log "scenario state" state
+    in
+    oneOf
+        [ succeed (\s -> Loop (s :: state))
+            |= scenario
+        , succeed ()
+            |> map (\_ -> Done (List.reverse state))
+        ]
 
 
 scenario : Parser Scenario
 scenario =
     succeed Scenario
-        |= many tag
+        |= tags
         |. spaces
         |. keyword "Scenario:"
         |. spaces
         |= title
-        |= description
+        |= description "Given"
         |= many step
 
 
