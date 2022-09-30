@@ -148,10 +148,6 @@ scenarios =
 
 scenarioLoop : List Scenario -> Parser (Step (List Scenario) (List Scenario))
 scenarioLoop state =
-    let
-        _ =
-            Debug.log "scenario state" state
-    in
     oneOf
         [ succeed (\s -> Loop (s :: state))
             |= scenario
