@@ -5,6 +5,7 @@ import GherkinParser
 import Posix.IO as IO exposing (IO, Process)
 import Posix.IO.File as File
 import Posix.IO.Process as Proc
+import SpecWriter
 
 
 program : Process -> IO ()
@@ -26,7 +27,7 @@ parse : String -> IO ()
 parse contents =
     case GherkinParser.parse contents of
         Ok value ->
-            Proc.print (Debug.toString value)
+            Proc.print (SpecWriter.writeSpec value)
 
         Err error ->
             Proc.print ("Error" ++ Debug.toString error)
