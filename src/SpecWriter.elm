@@ -27,6 +27,7 @@ imports =
 import Fixture
 import Runner
 import Spec
+import Spec.Observer as Observer
 import Main as App
 
     """
@@ -53,7 +54,7 @@ suite =
 scenarioSuites : List Scenario -> String
 scenarioSuites scenarios =
     """
-scenarioSuites : List (Spec.Scenario model msg)
+scenarioSuites : List (Spec.Scenario App.Model App.msg)
 scenarioSuites =
     """
         ++ "["
@@ -76,18 +77,40 @@ scenarioImplementation scenario =
         ++ scenario.title
         ++ "\"\n"
         ++ "   (Spec.given (Fixture.initScenario App.init App.view App.update)\n"
-        ++ (List.map scenarioStep scenario.steps |> String.join "\n")
+        ++ (List.foldl scenarioStep initState scenario.steps |> .lines)
 
 
-scenarioStep : Gherkin.Step -> String
-scenarioStep step =
+type alias State =
+    { seenThen : Bool
+    , lines : String
+    }
+
+
+initState : State
+initState =
+    { seenThen = False
+    , lines = ""
+    }
+
+
+scenarioStep : Gherkin.Step -> State -> State
+scenarioStep step state =
     let
-        srga =
-            Srttr
+        escaped =
+            String.replace "\"" "\\\"" step.argument
     in
-    "    |> Spec.when \""
-        ++ step.argument
-        ++ "\"\n"
-        ++ "       (Fixture.lookup \""
-        ++ step.argument
-        ++ "\")\n"
+    case step.givenWhenThen of
+        Gherkin.Then ->
+            { state | seenThen = True }
+
+        _ ->
+            { state
+                | lines =
+                    state.lines
+                        ++ "    |> Spec.when \""
+                        ++ escaped
+                        ++ "\"\n"
+                        ++ "       (Fixture.lookup \""
+                        ++ escaped
+                        ++ "\")\n"
+            }

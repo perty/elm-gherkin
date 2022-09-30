@@ -1,4 +1,4 @@
-module Fixture exposing (initScenario)
+module Fixture exposing (initScenario, lookup)
 
 import Spec.Setup as Setup
 
