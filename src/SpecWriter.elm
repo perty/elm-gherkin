@@ -96,21 +96,41 @@ initState =
 scenarioStep : Gherkin.Step -> State -> State
 scenarioStep step state =
     let
-        escaped =
-            String.replace "\"" "\\\"" step.argument
+        escapedQuoted =
+            "\"" ++ String.replace "\"" "\\\"" step.argument ++ "\""
     in
     case step.givenWhenThen of
         Gherkin.Then ->
-            { state | seenThen = True }
+            { state
+                | seenThen = True
+                , lines =
+                    state.lines
+                        ++ "    |> Spec.it"
+                        ++ escapedQuoted
+                        ++ "\n"
+                        ++ "     (Observer.observeModel identity\n"
+                        ++ "        |> Spec.expect (Claim.satisfying\n"
+            }
 
         _ ->
-            { state
-                | lines =
-                    state.lines
-                        ++ "    |> Spec.when \""
-                        ++ escaped
-                        ++ "\"\n"
-                        ++ "       (Fixture.lookup \""
-                        ++ escaped
-                        ++ "\")\n"
-            }
+            if not state.seenThen then
+                { state
+                    | lines =
+                        state.lines
+                            ++ "    |> Spec.when "
+                            ++ escapedQuoted
+                            ++ "\n"
+                            ++ "       (Fixture.lookup "
+                            ++ escapedQuoted
+                            ++ ")\n"
+                }
+
+            else
+                { state
+                    | lines = state.lines ++ stepToClaim step
+                }
+
+
+stepToClaim : Gherkin.Step -> String
+stepToClaim step =
+    step.argument
