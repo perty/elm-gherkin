@@ -79,7 +79,7 @@ scenarioImplementation scenario =
         ++ "\"\n"
         ++ "   (Spec.given (Fixture.initScenario App.init App.view App.update)\n"
         ++ (List.foldl scenarioStep initState scenario.steps |> .lines)
-        ++ "   ))"
+        ++ "   ))))"
 
 
 type alias State =
@@ -103,11 +103,12 @@ scenarioStep step state =
                 | seenThen = True
                 , lines =
                     state.lines
-                        ++ "    |> Spec.it"
+                        ++ "            |> Spec.it"
                         ++ escapedQuoted step.argument
                         ++ "\n"
-                        ++ "     (Observer.observeModel identity\n"
-                        ++ "        |> Spec.expect (Claim.satisfying(\n"
+                        ++ "                (Observer.observeModel identity\n"
+                        ++ "                    |> Spec.expect (Claim.satisfying(\n"
+                        ++ "      "
                         ++ stepToClaim step
             }
 
@@ -116,10 +117,10 @@ scenarioStep step state =
                 { state
                     | lines =
                         state.lines
-                            ++ "    |> Spec.when "
+                            ++ "            |> Spec.when "
                             ++ escapedQuoted step.argument
                             ++ "\n"
-                            ++ "       (Fixture.lookup "
+                            ++ "                (Fixture.lookup "
                             ++ escapedQuoted step.argument
                             ++ ")\n"
                 }

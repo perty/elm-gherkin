@@ -1,8 +1,10 @@
 module Fixture exposing (initScenario, lookup, lookupClaims)
 
 import Main
-import Spec.Claim as Claim exposing (Claim)
+import Spec.Claim exposing (Claim)
+import Spec.Command as Command
 import Spec.Setup as Setup
+import Spec.Step as Step exposing (Step)
 
 
 type alias Context =
@@ -16,13 +18,14 @@ initScenario init view update =
         |> Setup.withUpdate update
 
 
-lookupTable : List ( String, Context -> Context )
+lookupTable : List ( String, List (Step Main.Model Main.Msg) )
 lookupTable =
     [ ( "a quadrant at 3,5", aQuadrantAt )
+    , ( "starship is located at sector 3,5", starship_is_located_at_sector )
     ]
 
 
-lookup : String -> (Context -> Context)
+lookup : String -> List (Step Main.Model Main.Msg)
 lookup key =
     List.filter (\( k, _ ) -> match key k) lookupTable
         |> List.head
@@ -30,9 +33,9 @@ lookup key =
         |> Maybe.withDefault noOp
 
 
-noOp : Context -> Context
-noOp context =
-    context
+noOp : List (Step Main.Model Main.Msg)
+noOp =
+    []
 
 
 match : String -> String -> Bool
@@ -57,6 +60,18 @@ lookupClaims key =
         |> Maybe.withDefault []
 
 
-aQuadrantAt : Context -> Context
-aQuadrantAt context =
-    context
+sendMsg : Main.Msg -> Step.Context model -> Step.Command Main.Msg
+sendMsg msg =
+    Command.send <| Command.fake <| msg
+
+
+aQuadrantAt : List (Step Main.Model Main.Msg)
+aQuadrantAt =
+    [ sendMsg (Main.Enter "")
+    , sendMsg (Main.ClearQuadrant (Main.Position 3 5))
+    ]
+
+
+starship_is_located_at_sector : List (Step Main.Model Main.Msg)
+starship_is_located_at_sector =
+    [ sendMsg (Main.InitSectorPosition (Main.Position 3 5)) ]

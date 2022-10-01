@@ -1,14 +1,22 @@
-module Main exposing (Model, Msg(..), init, update, view)
+module Main exposing (Model, Msg(..), Position, init, update, view)
 
 import Html
 
 
 type Msg
-    = NoOp
+    = Enter String
+    | InitSectorPosition Position
+    | ClearQuadrant Position
 
 
 type alias Model =
     String
+
+
+type alias Position =
+    { row : Int
+    , col : Int
+    }
 
 
 init : () -> ( Model, Cmd Msg )
@@ -17,7 +25,7 @@ init _ =
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update _ model =
     ( model, Cmd.none )
 
 
