@@ -27,6 +27,7 @@ imports =
 import Fixture
 import Runner
 import Spec
+import Spec.Claim as Claim
 import Spec.Observer as Observer
 import Main as App
 
@@ -54,7 +55,7 @@ suite =
 scenarioSuites : List Scenario -> String
 scenarioSuites scenarios =
     """
-scenarioSuites : List (Spec.Scenario App.Model App.msg)
+scenarioSuites : List (Spec.Scenario App.Model App.Msg)
 scenarioSuites =
     """
         ++ "["
@@ -78,6 +79,7 @@ scenarioImplementation scenario =
         ++ "\"\n"
         ++ "   (Spec.given (Fixture.initScenario App.init App.view App.update)\n"
         ++ (List.foldl scenarioStep initState scenario.steps |> .lines)
+        ++ "   ))"
 
 
 type alias State =
@@ -95,10 +97,6 @@ initState =
 
 scenarioStep : Gherkin.Step -> State -> State
 scenarioStep step state =
-    let
-        escapedQuoted =
-            "\"" ++ String.replace "\"" "\\\"" step.argument ++ "\""
-    in
     case step.givenWhenThen of
         Gherkin.Then ->
             { state
@@ -106,10 +104,11 @@ scenarioStep step state =
                 , lines =
                     state.lines
                         ++ "    |> Spec.it"
-                        ++ escapedQuoted
+                        ++ escapedQuoted step.argument
                         ++ "\n"
                         ++ "     (Observer.observeModel identity\n"
-                        ++ "        |> Spec.expect (Claim.satisfying\n"
+                        ++ "        |> Spec.expect (Claim.satisfying(\n"
+                        ++ stepToClaim step
             }
 
         _ ->
@@ -118,19 +117,26 @@ scenarioStep step state =
                     | lines =
                         state.lines
                             ++ "    |> Spec.when "
-                            ++ escapedQuoted
+                            ++ escapedQuoted step.argument
                             ++ "\n"
                             ++ "       (Fixture.lookup "
-                            ++ escapedQuoted
+                            ++ escapedQuoted step.argument
                             ++ ")\n"
                 }
 
             else
                 { state
-                    | lines = state.lines ++ stepToClaim step
+                    | lines = state.lines ++ "              ++ " ++ stepToClaim step
                 }
 
 
 stepToClaim : Gherkin.Step -> String
 stepToClaim step =
-    step.argument
+    "   Fixture.lookupClaims "
+        ++ escapedQuoted step.argument
+        ++ "\n"
+
+
+escapedQuoted : String -> String
+escapedQuoted argument =
+    "\"" ++ String.replace "\"" "\\\"" argument ++ "\""
