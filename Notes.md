@@ -20,9 +20,11 @@ It struck me that it could possibly easier is to parse each line separately inst
 
 After parsing Gherkin, the next thing could be to connect steps with fixtures, sometimes called step definitions. First step is no fancy, just compare strings as they are and find the fixtures. In that area, matching fixtures using an expression, would be next. Example "Issues command "E" 12 4" should match "Issues command {string} {int} {int}".
 
-### Upcoming: Generate output
+### Baseline 2: Generate output 0.1
 
-Using the parsed Gherkin, we want to create an output. Like:
+Using the parsed Gherkin, we can to create an output that relies on elm-spec for execution. It assumes a Fixture module where the bridge to the implementation is.
+
+This baseline only handles scenarios.
 
 ```
 suite : Test

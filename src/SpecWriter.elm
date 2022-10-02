@@ -17,7 +17,7 @@ writeSpec featureFile =
 
 moduleHead : String -> String
 moduleHead title =
-    "module " ++ String.replace " " "_" title ++ " exposing (main)"
+    "module " ++ String.replace " " "_" title ++ "Spec exposing (main)"
 
 
 imports : String

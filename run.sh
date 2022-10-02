@@ -1,3 +1,3 @@
 #!/bin/bash
 
-elm-cli run src/ReadFile.elm README.md
+elm-cli run --debug src/ReadFile.elm examples/Navigation.feature >specs/src/NavigationSpec.elm
